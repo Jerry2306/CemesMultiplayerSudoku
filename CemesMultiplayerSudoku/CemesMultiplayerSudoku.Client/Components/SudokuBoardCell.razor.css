@@ -1,0 +1,75 @@
+﻿td {
+    border: solid rgba(30, 31, 34, 1) thin;
+    height: 3.3em;
+    width: 3.3em;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    padding: 0;
+}
+
+td:hover {
+    background-color: rgba(54, 55, 61, 0.8);
+}
+
+.notes-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 100%;
+    height: 100%;
+}
+
+.note-number {
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: rgba(128, 132, 142, 0.8);
+}
+
+.note-number.one {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.note-number.two {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.note-number.three {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.note-number.four {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.note-number.five {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.note-number.six {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.note-number.seven {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+.note-number.eight {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+.note-number.nine {
+    grid-column: 3;
+    grid-row: 3;
+}

@@ -1,0 +1,12 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
+@using CemesMultiplayerSudoku.Client.Core.Services
+@using CemesMultiplayerSudoku.Contract.GameSession.Dtos
+@inject NavigationManager NavigationManager
+@inject ApiService ApiService
+
+<PageTitle>Start</PageTitle>
+
+<CenteredContainer>
+    <a href="sudoku" style="color: white; font-size: 5rem">Hier geht's zum Sudoku...</a>
+</CenteredContainer>

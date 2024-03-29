@@ -1,0 +1,17 @@
+﻿<div class="apo-dialog-container">
+    <div class="apo-display-flex apo-flex-column apo-m-20 apo-text-center">
+        <span>@Message</span>
+        <span>Sieh dir in der Zwischenzeit den eiernden Spinner an.</span>
+    </div>
+
+    <div class="apo-w-full apo-display-flex apo-justify-content-center">
+        <div class="apo-spinner"></div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public string Message { get; set; } = "Irgendwas wird gerade geladen...";
+
+}

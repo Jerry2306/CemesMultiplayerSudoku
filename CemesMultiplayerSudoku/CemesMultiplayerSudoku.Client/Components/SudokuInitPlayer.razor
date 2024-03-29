@@ -1,0 +1,63 @@
+﻿@using CemesMultiplayerSudoku.Client.Core.Services
+@inject ApiService ApiService
+
+<div class="apo-dialog-container">
+    <h2>Spieler Informationen</h2>
+
+    <h3>Nickname:</h3>
+    <input type="text" placeholder="z.B. JoeMama" @bind="_name"/>
+    
+    <h3 style="margin-top: 10px;">Spielerfarbe:</h3>
+    <input type="text" placeholder="z.B. #A5C261" @bind="_color"/>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <span class="apo-text-color-error apo-mt-18">@_errorMessage</span>
+    }
+
+    <button class="apo-mt-18" @onclick="SetUser">Übernehmen</button>
+</div>
+
+@code {
+
+    [Parameter] public EventCallback OnUserSet { get; set; }
+    
+    private static readonly int[] ValidHexColorLengths = { 4, 7 };
+    private static readonly char[] ValidHexCharacters = { 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+
+    private string _errorMessage = string.Empty;
+
+    private string _name = string.Empty;
+    private string _color = string.Empty;
+
+    private async Task SetUser()
+    {
+        if (string.IsNullOrEmpty(_name))
+        {
+            _errorMessage = "Bitte einen Namen angeben.";
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_color) && !IsValidHexColor(_color))
+        {
+            _errorMessage = "Bitte eine gültige Farbe angeben.";
+            return;
+        }
+
+        _errorMessage = await ApiService.SetUser(_name, _color) ?? string.Empty;
+        if (string.IsNullOrEmpty(_errorMessage))
+            await OnUserSet.InvokeAsync();
+    }
+
+    private bool IsValidHexColor(string color)
+    {
+        if (!color.StartsWith("#"))
+            return false;
+
+        if (!ValidHexColorLengths.Contains(color.Length))
+            return false;
+
+        return color.Substring(1).All(x => ValidHexCharacters.Contains(x));
+    }
+
+}

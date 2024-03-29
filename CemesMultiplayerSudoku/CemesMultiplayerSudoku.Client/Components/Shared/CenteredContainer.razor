@@ -1,0 +1,10 @@
+﻿<div class="apo-h-full apo-display-flex apo-flex-column apo-align-items-center apo-justify-content-center">
+    @ChildContent
+</div>
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+}

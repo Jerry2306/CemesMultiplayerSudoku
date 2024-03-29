@@ -1,0 +1,49 @@
+﻿@page "/sudoku"
+@using CemesMultiplayerSudoku.Client.Core.Services
+@implements IDisposable
+@inject GameSessionManager GameSessionManager
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Sudoku APOAPOPAO</PageTitle>
+
+@if (!GameSessionManager.IsInitialized || string.IsNullOrEmpty(GameSessionManager.SessionToken))
+{
+    <CenteredContainer>
+        <SudokuLoading/>
+    </CenteredContainer>
+}
+else if (!GameSessionManager.IsUserSet)
+{
+    <CenteredContainer>
+        <SudokuInitPlayer OnUserSet="OnUserSet"/>
+    </CenteredContainer>
+}
+else if (GameSessionManager.GameState is null)
+{
+    <CenteredContainer>
+        <SudokuInitGame/>
+    </CenteredContainer>
+}
+else
+{
+    <SudokuGame/>
+}
+
+@code {
+
+    private IDisposable? _stateChangedHandlerDisposable;
+
+    protected override Task OnInitializedAsync()
+    {
+        _stateChangedHandlerDisposable = GameSessionManager.RegisterStateChangedHandler(GameSessionStateChanged);
+        return !GameSessionManager.IsInitialized ? GameSessionManager.InitializeSignalR() : Task.CompletedTask;
+    }
+
+    private Task OnUserSet() => InvokeAsync(StateHasChanged);
+
+    private Task GameSessionStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => _stateChangedHandlerDisposable?.Dispose();
+
+}

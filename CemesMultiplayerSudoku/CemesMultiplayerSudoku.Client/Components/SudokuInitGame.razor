@@ -1,0 +1,80 @@
+﻿@using CemesMultiplayerSudoku.Client.Core.Services
+@inject ApiService ApiService
+
+<div class="apo-dialog-container">
+    <h2>Eine Lobby erstellen oder beitreten</h2>
+
+    <h3>Erstellen:</h3>
+    <div class="apo-display-flex">
+        <input type="text" class="apo-flex-1" placeholder="Name der Lobby" @bind="_gameName"/>
+        <button @onclick="CreateGame" disabled="@_isInProgress">Erstellen</button>
+    </div>
+
+    <h3>Beitreten:</h3>
+    <div class="apo-display-flex">
+        <input type="text" class="apo-flex-1" placeholder="Code der Lobby" @bind="_gameCode"/>
+        <button @onclick="JoinGame" disabled="@_isInProgress">Beitreten</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <span class="apo-text-color-error apo-mt-18">@_errorMessage</span>
+    }
+</div>
+
+@if (_isInProgress)
+{
+    <SudokuLoading/>
+}
+
+@code {
+
+    private bool _isInProgress;
+    private string _errorMessage = string.Empty;
+
+    private string _gameName = string.Empty;
+    private string _gameCode = string.Empty;
+
+    private async Task CreateGame()
+    {
+        if (string.IsNullOrEmpty(_gameName))
+        {
+            _errorMessage = "Bitte einen Lobby-Namen angeben.";
+            return;
+        }
+        _errorMessage = string.Empty;
+        _isInProgress = true;
+        StateHasChanged();
+
+        try
+        {
+            _errorMessage = await ApiService.CreateGame(_gameName) ?? string.Empty;
+        }
+        finally
+        {
+            _isInProgress = false;
+        }
+    }
+
+    private async Task JoinGame()
+    {
+        if (string.IsNullOrEmpty(_gameCode))
+        {
+            _errorMessage = "Bitte einen Lobby-Code angeben.";
+            return;
+        }
+        _errorMessage = string.Empty;
+        _isInProgress = true;
+        StateHasChanged();
+
+        try
+        {
+            _errorMessage = await ApiService.JoinGame(_gameCode) ?? string.Empty;
+        }
+        finally
+        {
+            _isInProgress = false;
+        }
+    }
+
+}

@@ -1,0 +1,306 @@
+﻿@using CemesMultiplayerSudoku.Client.Core.Extensions
+@using CemesMultiplayerSudoku.Client.Core.Models
+@using CemesMultiplayerSudoku.Client.Core.Services
+@using System.Drawing
+@implements IDisposable
+@inject GameSessionManager GameSessionManager
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+@inject ILogger<SudokuGame> Logger
+
+@if (GameSessionManager.GameState is not null)
+{
+    <h3>Sudoku: "@GameSessionManager.GameState.Name"</h3>
+    <span>
+        Lobby-Code: <u>@GameSessionManager.GameState.Code</u>
+    </span>
+
+    <div class="apo-w-full apo-display-flex apo-justify-content-center">
+        <div class="side-container">
+            <span class="side-container-header">Chat und Aktivität</span>
+            <div class="apo-horizontal-line"></div>
+
+            @foreach (var gameEvent in GameSessionManager.Events)
+            {
+                <div class="event-message">@(gameEvent.Timestamp.ToString("HH:mm:ss")) -> @gameEvent.Message</div>
+            }
+        </div>
+
+        <table>
+            <colgroup>
+                <col/> <col/> <col/>
+            </colgroup>
+            <colgroup>
+                <col/> <col/> <col/>
+            </colgroup>
+            <colgroup>
+                <col/> <col/> <col/>
+            </colgroup>
+
+            @for (var i = 0; i < GameSessionManager.GameState.BoardState.Length; i += 3)
+            {
+                <tbody>
+                @for (var j = 0; j < 3; j++)
+                {
+                    <tr>
+                        @for (var k = 0; k < GameSessionManager.GameState.BoardState[i + j].Length; k++)
+                        {
+                            <SudokuBoardCell Cell="@GameSessionManager.GameState.BoardState[i + j][k]" X="@(i + j)" Y="@k" OnCellClicked="CellClicked"/>
+                        }
+                    </tr>
+                }
+                </tbody>
+            }
+
+        </table>
+
+        <div class="side-container">
+            <span class="side-container-header">Spieler der Lobby</span>
+            <div class="apo-horizontal-line"></div>
+
+            @foreach (var player in GameSessionManager.GameState.Players)
+            {
+                <div class="player-container">
+                    @if (GameSessionManager.GameState.HostPlayerId == player.Id)
+                    {
+                        <span class="apo-text-color-error">(HOST) </span>
+                    }
+                    <span class="player-name">@(player.Name)</span>:
+                    <div class="color-container" style="@($"background-color: rgba({player.Rgb.R},{player.Rgb.G},{player.Rgb.B}, .4)")"></div>
+                    <span>(@(player.Color ?? "#??????"))</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="apo-display-flex apo-justify-content-center apo-gap-8">
+        <div class="button-container">
+            <button @onclick="() => SetNumber(1)">1</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 1)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(2)">2</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 2)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(3)">3</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 3)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(4)">4</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 4)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(5)">5</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 5)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(6)">6</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 6)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(7)">7</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 7)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(8)">8</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 8)))</div>
+        </div>
+
+        <div class="button-container">
+            <button @onclick="() => SetNumber(9)">9</button>
+            <div class="button-number-overlay">@(9 - GameSessionManager.GameState.BoardState.Sum(x => x.Count(y => y.Dto.Value == 9)))</div>
+        </div>
+    </div>
+
+    <div class="apo-display-flex apo-justify-content-center apo-gap-8">
+        <button @onclick="() => SetNumber(0)">
+            <img src="svg/rubber.svg" alt="Rubber svg"/>
+        </button>
+
+        <button @onclick="() => SetNumber(10)">
+            <img src="svg/lightbulb.svg" alt="Lightbulb svg"/>
+        </button>
+
+        <button class="@(_isNoteMode ? "apo-button-toggled" : "")" @onclick="() => _isNoteMode = !_isNoteMode">
+            <img src="svg/pencil.svg" alt="Pencil svg"/>
+        </button>
+
+        <button @onclick="GenerateNewBoard">
+            <img src="svg/plus.svg" alt="Plus svg"/>
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <span class="apo-text-color-error">@_errorMessage</span>
+    }
+}
+
+@code {
+
+    private Point? _lastActiveCell;
+
+    private bool _isNoteMode;
+    private string _errorMessage = string.Empty;
+
+    private IDisposable? _stateChangedHandlerDisposable;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (GameSessionManager.GameState is null)
+        {
+            NavigationManager.NavigateTo("sudoku");
+            return Task.CompletedTask;
+        }
+
+        _stateChangedHandlerDisposable = GameSessionManager.RegisterStateChangedHandler(GameStateChanged);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task GenerateNewBoard() => await SetErrorMessage(await ApiService.NewBoard());
+
+    private async Task SetNumber(byte value)
+    {
+        if (_lastActiveCell is null)
+            return;
+        var cell = _lastActiveCell.Value;
+        var board = GameSessionManager.GameState?.BoardState;
+
+        if (value == 10)
+        {
+            await SetErrorMessage(await ApiService.GetHint(cell.X, cell.Y));
+            return;
+        }
+
+        if (_isNoteMode && value != 0 && board is not null)
+        {
+            if (board[cell.X][cell.Y].Dto.Notes.Contains(value))
+                await SetErrorMessage(await ApiService.EraseNote(value, cell.X, cell.Y));
+            else
+                await SetErrorMessage(await ApiService.SetNote(value, cell.X, cell.Y));
+
+            return;
+        }
+
+        if (value == 0)
+            await SetErrorMessage(await ApiService.EraseNumber(cell.X, cell.Y));
+        else
+            await SetErrorMessage(await ApiService.SetNumber(value, cell.X, cell.Y));
+    }
+
+    private async Task Update()
+    {
+        await SetActiveCellColors();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task GameStateChanged()
+    {
+        if (GameSessionManager.GameState is not null)
+            return Update();
+
+        NavigationManager.NavigateTo("sudoku");
+        return Task.CompletedTask;
+    }
+
+    private Dictionary<Point, CellStateModel> _activeCells = new();
+
+    private Task SetActiveCellColors()
+    {
+        if (GameSessionManager.GameState is null)
+            return Task.CompletedTask;
+
+        _activeCells.Clear();
+        for (var i = 0; i < GameSessionManager.GameState.BoardState.Length; i++)
+            for (var j = 0; j < GameSessionManager.GameState.BoardState[i].Length; j++)
+            {
+                var cell = GameSessionManager.GameState.BoardState[i][j];
+                if (cell.SelectedByPlayers.Count == 0)
+                    continue;
+
+                _activeCells[new Point(i, j)] = cell;
+            }
+
+        var activeNumbersGroupedByValue = _activeCells.GroupBy(x => x.Value.Dto.Value).Select(x => new
+        {
+            Value = x.Key,
+            Colors = x.SelectMany(y => y.Value.SelectedByPlayers.DistinctBy(c => c.Id).Select(z => z.Rgb))
+                .OrderBy(y => y.R).ThenBy(y => y.G).ThenBy(y => y.B)
+        }).Where(x => x.Value != 0).ToDictionary(x => x.Value, y => y.Colors.ToArray());
+
+        var allCells = GameSessionManager.GameState.BoardState.SelectMany(x => x).ToList();
+        allCells.ForEach(x =>
+        {
+            x.ActiveColor = null;
+            x.SelectedNumbers = activeNumbersGroupedByValue;
+        });
+
+        foreach (var activeCell in _activeCells)
+        {
+            var point = activeCell.Key;
+            for (var i = 0; i < 9; i++)
+            {
+                if (point.X != i || point.Y != i)
+                {
+                    var columnCell = GameSessionManager.GameState.BoardState[point.X][i];
+                    columnCell.ActiveColor = columnCell.ActiveColor.CalculateColors(activeCell.Value.SelectedByPlayers.Select(x => x.Rgb));
+                }
+
+                var rowCell = GameSessionManager.GameState.BoardState[i][point.Y];
+                rowCell.ActiveColor = rowCell.ActiveColor.CalculateColors(activeCell.Value.SelectedByPlayers.Select(x => x.Rgb));
+            }
+
+            var quadX = point.X / 3;
+            var quadY = point.Y / 3;
+
+            for (var iY = 0; iY < 3; iY++)
+                for (var iX = 0; iX < 3; iX++)
+                {
+                    var calculatedX = quadX * 3 + iX;
+                    var calculatedY = quadY * 3 + iY;
+                    if (calculatedX == point.X || calculatedY == point.Y)
+                        continue;
+
+                    var cell = GameSessionManager.GameState.BoardState[calculatedX][calculatedY];
+                    cell.ActiveColor = cell.ActiveColor.CalculateColors(activeCell.Value.SelectedByPlayers.Select(x => x.Rgb));
+                }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task CellClicked(Point cell)
+    {
+        if (_lastActiveCell is not null && _lastActiveCell.Value.X == cell.X && _lastActiveCell.Value.Y == cell.Y)
+        {
+            _lastActiveCell = null;
+            await SetErrorMessage(await ApiService.DeselectField());
+            return;
+        }
+
+        _lastActiveCell = cell;
+        await SetErrorMessage(await ApiService.SelectField(cell.X, cell.Y));
+    }
+
+    private Task SetErrorMessage(string? errorMessage)
+    {
+        var newErrorMessage = errorMessage ?? string.Empty;
+        if (newErrorMessage == _errorMessage)
+            return Task.CompletedTask;
+
+        _errorMessage = newErrorMessage;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => _stateChangedHandlerDisposable?.Dispose();
+
+}
